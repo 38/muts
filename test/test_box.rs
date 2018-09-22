@@ -1,11 +1,11 @@
-use crate::boxed::{Box, AllocateWith};
-use crate::allocator::c_malloc::CMalloc;
-use crate::{Allocator, AllocResult};
+use crate::ptr::{My};
+use crate::allocator::cmalloc::CMalloc;
+use crate::{Allocator, AllocResult, AllocateWith};
 
 #[test]
 fn test_box_with_malloc()
 {
-    let mut test = Box::new([1i32;1024], AllocateWith::<CMalloc>::get(()));
+    let mut test = My::new([1i32;1024], AllocateWith::<CMalloc>::with_args(()));
 
     for i in 0..1024
     {
@@ -48,11 +48,11 @@ fn test_box_customized_alloc()
     let allocator = TestAlloc {
         cnt : std::cell::Cell::new(0),
         pd  : ::std::marker::PhantomData
-    };
+    }; 
 
     {
 
-        let mut test = Box::new([1i32;1024], AllocateWith::<TestAlloc>::get(&allocator));
+        let mut test = My::new([1i32;1024], AllocateWith::<TestAlloc>::with_args(&allocator));
         
         for i in 0..1024
         {
@@ -66,13 +66,17 @@ fn test_box_customized_alloc()
 
         assert_eq!(allocator.cnt.get(), 1);
 
+        let my_ref = test.borrow();
+
         {
-            let another = Box::new([1i32;1024], AllocateWith::<TestAlloc>::get(&allocator));
+            let another = My::new([1i32;1024], AllocateWith::<TestAlloc>::with_args(&allocator));
             assert_eq!(allocator.cnt.get(), 2);
             assert_eq!(another.iter().fold(0, |x,y| x+y), 1024);
         }
         
         assert_eq!(allocator.cnt.get(), 1);
+
+        assert_eq!(my_ref[12], 36);
     }
 
     assert_eq!(allocator.cnt.get(), 0);

@@ -1,1 +1,1 @@
-pub mod c_malloc;
+pub mod cmalloc;
